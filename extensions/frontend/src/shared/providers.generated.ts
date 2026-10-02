@@ -350,6 +350,20 @@ export const PROVIDER_PRESETS: OcrProviderPreset[] = [
     ]
   },
   {
+    "name": "qwen-cloud",
+    "displayName": "Qwen Cloud Token Plan API (Singapore)",
+    "protocol": "openai",
+    "baseUrl": "https://token-plan.maas.qwencloudapi.com/compatible-mode/v1",
+    "envVar": "QWEN_CLOUD_API_KEY",
+    "models": [
+      "qwen3.8-max",
+      "qwen3.8-flash",
+      "qwen3.7-max",
+      "qwen3.7-plus",
+      "qwen3.6-flash"
+    ]
+  },
+  {
     "name": "siliconflow",
     "displayName": "SiliconFlow API",
     "protocol": "openai",

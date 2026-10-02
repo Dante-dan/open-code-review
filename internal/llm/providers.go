@@ -199,6 +199,20 @@ var registry = []Provider{
 		},
 	},
 	{
+		Name:        "qwen-cloud",
+		DisplayName: "Qwen Cloud Token Plan API (Singapore)",
+		Protocol:    ProtocolOpenAIChatCompletions,
+		BaseURL:     "https://token-plan.maas.qwencloudapi.com/compatible-mode/v1",
+		EnvVar:      "QWEN_CLOUD_API_KEY",
+		Models: []string{
+			"qwen3.8-max",
+			"qwen3.8-flash",
+			"qwen3.7-max",
+			"qwen3.7-plus",
+			"qwen3.6-flash",
+		},
+	},
+	{
 		Name:        "volcengine",
 		DisplayName: "Volcano Engine Ark API",
 		Protocol:    ProtocolOpenAIChatCompletions,

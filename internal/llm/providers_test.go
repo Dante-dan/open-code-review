@@ -76,7 +76,7 @@ func TestListProviders_Order(t *testing.T) {
 	if len(providers) < 3 {
 		t.Fatalf("expected at least 3 providers, got %d", len(providers))
 	}
-	expected := []string{"anthropic", "baidu-qianfan", "bedrock", "dashscope", "dashscope-tokenplan", "deepseek", "edenai", "gemini", "hy-tokenplan", "iflytek", "kimi", "kimi-global", "litellm", "mimo", "minimax", "minimax-cn", "mistral", "novita", "ollama-cloud", "openai", "openai-responses", "openrouter", "siliconflow", "siliconflow-cn", "tencent-tokenhub", "volcengine", "xai", "z-ai", "z-ai-coding"}
+	expected := []string{"anthropic", "baidu-qianfan", "bedrock", "dashscope", "dashscope-tokenplan", "deepseek", "edenai", "gemini", "hy-tokenplan", "iflytek", "kimi", "kimi-global", "litellm", "mimo", "minimax", "minimax-cn", "mistral", "novita", "ollama-cloud", "openai", "openai-responses", "openrouter", "qwen-cloud", "siliconflow", "siliconflow-cn", "tencent-tokenhub", "volcengine", "xai", "z-ai", "z-ai-coding"}
 	if len(providers) != len(expected) {
 		t.Fatalf("expected %d providers, got %d", len(expected), len(providers))
 	}
@@ -449,6 +449,31 @@ func TestProviders_AllProtocolsCanonical(t *testing.T) {
 		}
 		if err := ValidateProtocol(p.Protocol); err != nil {
 			t.Errorf("provider %q has non-canonical Protocol %q: %v", p.Name, p.Protocol, err)
+		}
+	}
+}
+
+func TestLookupProvider_QwenCloudDetails(t *testing.T) {
+	p, ok := LookupProvider("qwen-cloud")
+	if !ok {
+		t.Fatal("Qwen Cloud provider not found")
+	}
+	if p.Protocol != ProtocolOpenAIChatCompletions {
+		t.Errorf("protocol = %q", p.Protocol)
+	}
+	if p.BaseURL != "https://token-plan.maas.qwencloudapi.com/compatible-mode/v1" {
+		t.Errorf("BaseURL = %q", p.BaseURL)
+	}
+	if p.EnvVar != "QWEN_CLOUD_API_KEY" {
+		t.Errorf("EnvVar = %q", p.EnvVar)
+	}
+	models := []string{"qwen3.8-max", "qwen3.8-flash", "qwen3.7-max", "qwen3.7-plus", "qwen3.6-flash"}
+	if len(p.Models) != len(models) {
+		t.Fatalf("model count = %d, want %d", len(p.Models), len(models))
+	}
+	for i, model := range models {
+		if p.Models[i] != model {
+			t.Errorf("Models[%d] = %q, want %q", i, p.Models[i], model)
 		}
 	}
 }

@@ -52,6 +52,7 @@ environment variable.
 | `gemini` | openai | `https://generativelanguage.googleapis.com/v1beta/openai` | `GEMINI_API_KEY` |
 | `dashscope` | openai | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `DASHSCOPE_API_KEY` |
 | `dashscope-tokenplan` | openai | `https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1` | `DASHSCOPE_TOKENPLAN_KEY` |
+| `qwen-cloud` | openai | `https://token-plan.maas.qwencloudapi.com/compatible-mode/v1` | `QWEN_CLOUD_API_KEY` |
 | `volcengine` | openai | `https://ark.cn-beijing.volces.com/api/v3` | `ARK_API_KEY` |
 | `deepseek` | openai | `https://api.deepseek.com` | `DEEPSEEK_API_KEY` |
 | `tencent-tokenhub` | openai | `https://tokenhub.tencentmaas.com/v1` | `TENCENT_TOKENHUB_API_KEY` |
@@ -68,6 +69,19 @@ environment variable.
 | `siliconflow-cn`  | openai | `https://api.siliconflow.cn/v1` | `SILICONFLOW_API_KEY` |
 | `novita` | openai | `https://api.novita.ai/openai` | `NOVITA_API_KEY` |
 | `xai` | openai | `https://api.x.ai/v1` | `XAI_API_KEY` |
+
+### Qwen Cloud Token Plan (Singapore)
+
+Select `qwen-cloud` for the [Singapore Token Plan endpoint](https://docs.qwencloud.com/token-plan/personal/token-plan-personal-quickstart).
+It requires the plan's dedicated `sk-sp-` API key, rather than a DashScope
+pay-as-you-go key. The Beijing plan remains available as `dashscope-tokenplan`.
+
+```bash
+export QWEN_CLOUD_API_KEY="<your Singapore Token Plan key>"
+ocr config set provider qwen-cloud
+ocr config set model qwen3.8-max
+ocr llm test
+```
 
 ### Overriding a built-in provider's Base URL
 
