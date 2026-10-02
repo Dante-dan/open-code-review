@@ -547,7 +547,7 @@ require("fs").appendFileSync(process.env.OCR_GIT_CALLS, JSON.stringify(process.a
 }
 
 function testPrNumberWiredIntoBothGithubScriptSteps() {
-  for (const name of ["Resolve review range", "Post review comments"]) {
+  for (const name of ["Resolve review range", "Post review comments", "Save review state"]) {
     const step = stepNamed(name);
     assert.ok(step, `action.yml must retain the ${name} step`);
     assert.strictEqual(
@@ -563,8 +563,8 @@ function testPrNumberWiredIntoBothGithubScriptSteps() {
   );
   assert.strictEqual(
     (ACTION_TEXT.match(/prNumber: Number\(process\.env\.OCR_PR_NUMBER\)/g) || []).length,
-    2,
-    "both github-script steps must pass the resolved number"
+    3,
+    "range, post and save steps must pass the resolved number"
   );
 }
 
@@ -1957,7 +1957,30 @@ function testExampleReadmeDocumentsTimeoutAndVersionContracts() {
   );
 }
 
+function testSplitReviewModes() {
+  assert.strictEqual(INPUTS.mode.default, "all");
+  assert.match(INPUTS.state_path.default, /runner.temp/);
+  const mode = STEPS.find((step) => step.name === "Validate mode");
+  for (const value of ["all", "review", "post", "invalid", ""]) {
+    const fixture = makeFixture();
+    try {
+      const result = runShell(renderedRun(mode, inputValues()), { OCR_ACTION_MODE: value }, fixture);
+      assert.strictEqual(result.status === 0, ["all", "review", "post"].includes(value));
+    } finally { removeFixture(fixture); }
+  }
+  for (const name of ["Resolve PR refs", "Checkout base", "Fetch PR head (fork-safe)", "Compute merge-base", "Validate inputs", "Install OpenCodeReview", "Configure OCR", "Resolve review range", "Run OpenCodeReview", "Fail job on OCR error"]) {
+    const step = STEPS.find((step) => step.name === name);
+    const end = STEPS.find((next) => next.index > step.index)?.index || ACTION_TEXT.split("\n").length;
+    assert.match(ACTION_TEXT.split("\n").slice(step.index, end).join("\n"), /if: inputs.mode != 'post'/, name);
+  }
+  assert.match(ACTION_TEXT, /name: Post review comments\n\s+if: inputs.mode == 'all'/);
+  assert.match(ACTION_TEXT, /name: Post saved review\n\s+if: inputs.mode == 'post'/);
+  assert.ok(STEPS.findIndex((step) => step.name === "Clear previous review state") < STEPS.findIndex((step) => step.name === "Run OpenCodeReview"));
+  assert.match(ACTION_TEXT, /name: Save review state\n\s+if: inputs.mode == 'review' && env.OCR_EXIT_CODE == '0'/);
+}
+
 const TESTS = [
+  ["split modes validate and isolate review/post phases", testSplitReviewModes],
   ["review_task_timeout names and describes the CLI task deadline", testReviewTaskTimeoutInputNameAndScope],
   ["llm_timeout defaults to the CLI's 5-minute timeout", testLlmTimeoutInputDefault],
   ["review_task_timeout accepts 1/10/120", testReviewTimeoutValidationAcceptsBoundaries],
