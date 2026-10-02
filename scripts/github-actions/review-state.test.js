@@ -53,9 +53,25 @@ async function main() {
     await assert.rejects(postReviewState({ statePath, github, context, core }), /different/);
     if (originalJob === undefined) delete process.env.GITHUB_JOB;
     else process.env.GITHUB_JOB = originalJob;
+    const reordered = { ...saved, identity: Object.fromEntries(Object.entries(saved.identity).reverse()), outputs: { range_mode: "checkpoint" } };
+    fs.writeFileSync(statePath, JSON.stringify(reordered));
+    await postReviewState({ statePath, github, context, core: { info() {}, warning() {} } });
+    assert.strictEqual(calls.length, 2, "identity field order must not prevent posting without output support");
+    for (const runId of [null, undefined]) {
+      saveReviewState({ statePath, context: { ...context, runId }, headSha, resultPath, stderrPath,
+        options: saved.options });
+      assert.strictEqual(JSON.parse(fs.readFileSync(statePath, "utf8")).identity.run, "");
+      await assert.rejects(postReviewState({ statePath, github, context, core }), /different/);
+    }
+    fs.writeFileSync(resultPath, "{");
+    saveReviewState({ statePath, context, headSha, resultPath, stderrPath, options: saved.options });
+    await postReviewState({ statePath, github, context, core });
+    assert.strictEqual(calls.length, 3, "malformed results must reach the existing posting error handler");
+    assert.match(calls[2].body, /review stderr/);
+    fs.writeFileSync(statePath, JSON.stringify(saved));
     github.rest.pulls.get = async () => ({ data: { head: { sha: "2".repeat(40) } } });
     await assert.rejects(postReviewState({ statePath, github, context, core }), /head changed/);
-    assert.strictEqual(calls.length, 1, "invalid states must not publish");
+    assert.strictEqual(calls.length, 3, "invalid states must not publish");
     fs.writeFileSync(statePath, "{");
     await assert.rejects(postReviewState({ statePath, github, context, core }), SyntaxError);
     console.log("Review state round trip, credentials exclusion, identity and stale-head tests passed.");

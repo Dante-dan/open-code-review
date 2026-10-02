@@ -11,7 +11,7 @@ const { runPostReviewComments } = require("./post-review-comments");
 function identity(context) {
   return {
     repository: `${context.repo.owner}/${context.repo.repo}`,
-    run: String(context.runId),
+    run: String(context.runId != null ? context.runId : ""),
     attempt: String(process.env.GITHUB_RUN_ATTEMPT || ""),
     job: String(process.env.GITHUB_JOB || ""),
   };
@@ -19,7 +19,6 @@ function identity(context) {
 
 function saveReviewState({ statePath, context, headSha, resultPath, stderrPath, options, outputs = {} }) {
   const result = fs.readFileSync(resultPath, "utf8");
-  JSON.parse(result);
   const state = {
     version: 1,
     identity: identity(context),
@@ -39,7 +38,8 @@ function saveReviewState({ statePath, context, headSha, resultPath, stderrPath, 
 
 async function postReviewState({ statePath, github, context, core }) {
   const state = JSON.parse(fs.readFileSync(statePath, "utf8"));
-  if (state.version !== 1 || JSON.stringify(state.identity) !== JSON.stringify(identity(context))) {
+  const expectedIdentity = identity(context);
+  if (state.version !== 1 || Object.keys(expectedIdentity).some((key) => state.identity?.[key] !== expectedIdentity[key])) {
     throw new Error("Saved review belongs to a different repository, run, attempt or job");
   }
   if (!state.headSha || !Number.isSafeInteger(state.options?.prNumber) || state.options.prNumber < 1) {
@@ -60,7 +60,9 @@ async function postReviewState({ statePath, github, context, core }) {
     fs.writeFileSync(resultPath, state.result, { mode: 0o600 });
     fs.writeFileSync(stderrPath, state.stderr, { mode: 0o600 });
     await runPostReviewComments({ ...state.options, github, context, core, fs, resultPath, stderrPath });
-    for (const [key, value] of Object.entries(state.outputs || {})) core.setOutput(key, value);
+    if (core && typeof core.setOutput === "function") {
+      for (const [key, value] of Object.entries(state.outputs || {})) core.setOutput(key, value);
+    }
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
