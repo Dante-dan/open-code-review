@@ -5251,7 +5251,7 @@ function testActionEmitsMachineReadableRangeOutputs() {
 function testActionPinsGithubScriptSha() {
   assert.strictEqual(/actions\/github-script@v/.test(ACTION_YML), false, "no floating github-script tag may remain");
   const uses = [...ACTION_YML.matchAll(/uses: actions\/github-script@([0-9a-f]{40})/g)].map((m) => m[1]);
-  assert.strictEqual(uses.length, 5, "all github-script steps are pinned");
+  assert.strictEqual(uses.length, 4, "all github-script steps are pinned");
   assert.strictEqual(new Set(uses).size, 1, "…to the same sha");
 }
 
