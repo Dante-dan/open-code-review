@@ -9,7 +9,7 @@ branding:
 
 inputs:
   mode:
-    description: "all runs and posts a review; review saves it; post publishes a saved review in the same job."
+    description: "all runs and posts a review; review saves it; post publishes a saved review. Transfer the state file when using separate jobs or workflows."
     required: false
     default: all
   state_path:
