@@ -115,7 +115,7 @@ func TestGetDiffSetWalksChangesetOrder(t *testing.T) {
 	runGitTest(t, repo, "config", "user.name", "Test User")
 	runGitTest(t, repo, "config", "commit.gpgsign", "false")
 
-	paths := []string{"a.go", "target/mid.go", "z.go"}
+	paths := []string{"a.go", "pkgs/app/default.nix", "target/mid.go", "z.go"}
 	write := func(content string) {
 		t.Helper()
 		for _, p := range paths {
@@ -147,8 +147,8 @@ func TestGetDiffSetWalksChangesetOrder(t *testing.T) {
 	if !slices.Equal(got, paths) {
 		t.Errorf("ForEachInOrder paths = %v, want %v", got, paths)
 	}
-	if len(flags) != 3 || flags[0] || !flags[1] || flags[2] {
-		t.Errorf("providerExcluded flags = %v, want [false true false]", flags)
+	if !slices.Equal(flags, []bool{false, false, true, false}) {
+		t.Errorf("providerExcluded flags = %v, want [false false true false]", flags)
 	}
 }
 

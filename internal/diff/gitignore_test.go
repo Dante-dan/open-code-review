@@ -42,6 +42,8 @@ func TestProviderDirPrefix(t *testing.T) {
 		{"target/.pnpm/pkg/index.js", "target/"},
 		{"src/vendor/keep.go", ""},
 		{"main.go", ""},
+		{"pkgs", ""},
+		{"pkgs/app/default.nix", ""},
 	}
 	for _, tc := range tests {
 		if got := ProviderDirPrefix(tc.path); got != tc.want {
@@ -91,6 +93,8 @@ func TestIsPathExcluded(t *testing.T) {
 		{"gitignore pattern match", "debug.log", []string{"*.log"}, true},
 		{"no match", "main.go", []string{"*.log"}, false},
 		{"no patterns", "main.go", nil, false},
+		{"pkgs source", "pkgs/app/default.nix", nil, false},
+		{"explicit pkgs exclusion", "pkgs/app/default.nix", []string{"pkgs/"}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

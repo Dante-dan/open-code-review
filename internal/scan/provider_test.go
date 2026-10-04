@@ -132,6 +132,7 @@ func TestProvider_Enumerate_FullRepo(t *testing.T) {
 	repo := initTestRepo(t)
 	writeFile(t, repo, "main.go", []byte("package main\n\nfunc main() {}\n"))
 	writeFile(t, repo, "pkg/util.go", []byte("package pkg\n"))
+	writeFile(t, repo, "pkgs/app/default.nix", []byte("{}\n"))
 	writeFile(t, repo, "image.bin", []byte{0x00, 0x01, 0x02})
 	writeFile(t, repo, ".gitignore", []byte("ignored.txt\n"))
 	writeFile(t, repo, "ignored.txt", []byte("should not appear\n"))
@@ -195,7 +196,7 @@ func TestProvider_Enumerate_NonGitDirectory(t *testing.T) {
 	}
 	sort.Strings(paths)
 
-	want := []string{".gitignore", "main.go", "pkg/util.go"}
+	want := []string{".gitignore", "main.go", "pkg/util.go", "pkgs/app/default.nix"}
 	if !reflect.DeepEqual(paths, want) {
 		t.Errorf("paths = %v, want %v (ignored.txt must be filtered by .gitignore, node_modules/* by ExcludedDirs)", paths, want)
 	}
