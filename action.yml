@@ -11,11 +11,11 @@ inputs:
   mode:
     description: "all runs and posts a review; review saves it; post publishes a saved review. Transfer the state file when using separate jobs or workflows."
     required: false
-    default: all
+    default: 'all'
   state_path:
     description: "Saved review file shared by review and post calls. Use a separate path for each review in a job."
     required: false
-    default: ${{ runner.temp }}/ocr-review-state.json
+    default: '${{ runner.temp }}/ocr-review-state.json'
   llm_url:
     description: LLM API endpoint URL (mapped to env OCR_LLM_URL).
     required: false
