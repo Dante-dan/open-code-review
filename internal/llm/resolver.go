@@ -525,21 +525,21 @@ func tryProviderConfig(cfg configFile, modelOverride string) (ResolvedEndpoint, 
 	}
 	availableModels = append(availableModels, entry.Models...)
 
-	// Bedrock identifiers are account- and region-specific, while aggregators
-	// with open catalogs may accept models absent from the preset. Their lists
-	// remain picker suggestions rather than gates for per-run overrides.
-	gateOverrideOnModelList := !ambientAuth && !(isPreset && preset.OpenModelList)
-
-	// Apply model override with validation.
+	// Preset lists can lag provider catalogs, so they guide interactive selection
+	// without preventing a per-run override. A custom provider's configured list
+	// remains a constraint except with ambient, account-scoped authentication.
 	if modelOverride != "" {
-		if gateOverrideOnModelList && len(availableModels) > 0 {
-			if !ModelListContains(availableModels, modelOverride) {
+		if len(availableModels) > 0 && !ModelListContains(availableModels, modelOverride) {
+			if !isPreset && !ambientAuth {
 				return ResolvedEndpoint{}, false, fmt.Errorf(
 					"model %q is not available for provider %q; available models: %s",
 					modelOverride,
 					cfg.Provider,
 					strings.Join(availableModels, ", "),
 				)
+			}
+			if isPreset {
+				fmt.Fprintf(os.Stderr, "[ocr] WARNING: model %q is not in the suggested models for provider %q; the provider will validate it\n", modelOverride, cfg.Provider)
 			}
 		}
 		model = modelOverride

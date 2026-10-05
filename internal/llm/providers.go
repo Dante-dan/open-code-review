@@ -21,14 +21,13 @@ import (
 // To add a built-in provider that speaks a different protocol, set Protocol
 // accordingly and ensure NewLLMClient has a matching case.
 type Provider struct {
-	Name          string
-	DisplayName   string
-	Protocol      string
-	BaseURL       string
-	AuthHeader    string // Anthropic-only; empty for OpenAI-compatible
-	EnvVar        string // environment variable name for API key fallback
-	Models        []string
-	OpenModelList bool // preset models are suggestions, not an override allowlist
+	Name        string
+	DisplayName string
+	Protocol    string
+	BaseURL     string
+	AuthHeader  string // Anthropic-only; empty for OpenAI-compatible
+	EnvVar      string // environment variable name for API key fallback
+	Models      []string
 
 	// AmbientAuth marks a provider whose credentials come from the
 	// environment's own chain rather than an api_key — AWS SigV4, for
@@ -110,12 +109,11 @@ var registry = []Provider{
 		},
 	},
 	{
-		Name:          "openrouter",
-		DisplayName:   "OpenRouter",
-		Protocol:      ProtocolOpenAIChatCompletions,
-		BaseURL:       "https://openrouter.ai/api/v1",
-		EnvVar:        "OPENROUTER_API_KEY",
-		OpenModelList: true,
+		Name:        "openrouter",
+		DisplayName: "OpenRouter",
+		Protocol:    ProtocolOpenAIChatCompletions,
+		BaseURL:     "https://openrouter.ai/api/v1",
+		EnvVar:      "OPENROUTER_API_KEY",
 		Models: []string{
 			"anthropic/claude-fable-5.1",
 			"openai/gpt-5.6-sol",
