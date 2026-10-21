@@ -763,7 +763,7 @@ func TestObserverHTTPAttemptSpans(t *testing.T) {
 						t.Fatalf("attempt %d attrs: %v", i+1, attrs)
 					}
 					duration := span.EndTime().Sub(span.StartTime())
-					if duration <= 0 || attrs["llm.duration_ms"].AsFloat64() != float64(duration)/float64(time.Millisecond) {
+					if duration < 0 || attrs["llm.duration_ms"].AsFloat64() != float64(duration)/float64(time.Millisecond) {
 						t.Fatalf("attempt duration mismatch: %v", attrs)
 					}
 					if i < 2 && (span.Status().Code != codes.Error || attrs["error.type"].AsString() == "") {
@@ -809,5 +809,44 @@ func TestObserverTransportSpanWithoutCollector(t *testing.T) {
 	}
 	if len(spans[0].Events()) != 0 {
 		t.Fatal("raw transport error exported")
+	}
+}
+
+func TestObserverEndsSpanWhenTransportPanics(t *testing.T) {
+	recorder := tracetest.NewSpanRecorder()
+	provider := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder))
+	previous := otel.GetTracerProvider()
+	otel.SetTracerProvider(provider)
+	defer otel.SetTracerProvider(previous)
+	defer func() { _ = provider.Shutdown(context.Background()) }()
+	req, err := http.NewRequest(http.MethodPost, "https://example.test", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const payload = "private transport panic"
+	func() {
+		defer func() {
+			if got := recover(); got != payload {
+				t.Fatalf("panic = %v, want original transport panic", got)
+			}
+		}()
+		_, _ = newRetryObserver(nil)(req, func(*http.Request) (*http.Response, error) {
+			panic(payload)
+		})
+	}()
+	spans := recorder.Ended()
+	if len(spans) != 1 || spans[0].Name() != "llm.http_attempt" {
+		t.Fatalf("ended spans = %v, want one HTTP attempt", spans)
+	}
+	if spans[0].EndTime().Before(spans[0].StartTime()) {
+		t.Fatal("attempt ended before it started")
+	}
+	if len(spans[0].Events()) != 0 {
+		t.Fatal("raw panic exported")
+	}
+	for _, attr := range spans[0].Attributes() {
+		if strings.Contains(attr.Value.AsString(), "private") {
+			t.Fatalf("private panic attribute: %v", attr)
+		}
 	}
 }

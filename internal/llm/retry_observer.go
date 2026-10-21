@@ -46,8 +46,15 @@ func newRetryObserver(collector *RetryCollector) retryObserver {
 			trace.WithSpanKind(trace.SpanKindClient),
 			trace.WithTimestamp(startedAt),
 			trace.WithAttributes(attribute.Int64("llm.attempt", number)))
+		var endedAt time.Time
+		defer func() {
+			if endedAt.IsZero() {
+				endedAt = time.Now()
+			}
+			span.End(trace.WithTimestamp(endedAt))
+		}()
 		res, err := next(req.WithContext(ctx))
-		endedAt := time.Now()
+		endedAt = time.Now()
 		attempt := observeAttempt(res, err, endedAt)
 		if collector != nil && hasMeta {
 			collector.RecordAttempt(meta, attempt, startedAt, endedAt)
@@ -63,7 +70,6 @@ func newRetryObserver(collector *RetryCollector) retryObserver {
 				attribute.String("llm.failure_phase", string(attempt.FailurePhase)))
 			span.SetStatus(codes.Error, string(attempt.ErrorClass))
 		}
-		span.End(trace.WithTimestamp(endedAt))
 		return res, err
 	}
 }
